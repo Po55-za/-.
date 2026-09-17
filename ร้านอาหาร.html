@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รวม 14 ร้านอร่อย โรงเรียนของเรา</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Kanit', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f7;
+            color: #333;
+            padding-bottom: 50px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        header h1 { font-size: 2.2rem; margin-bottom: 8px; }
+        header p { font-size: 1.1rem; opacity: 0.9; }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .card-content {
+            padding: 15px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .shop-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 5px;
+        }
+
+        .shop-location {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 12px;
+        }
+
+        .btn-view {
+            width: 100%;
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-view:hover { background-color: #ee5253; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px; right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .close-btn:hover { color: #000; }
+
+        .modal-title { font-size: 1.5rem; color: #ff6b6b; margin-bottom: 10px; }
+        .modal-img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; margin-bottom: 15px; }
+        
+        .menu-list { list-style: none; margin-top: 10px; }
+
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
+        }
+
+        .menu-item:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🍱 รวม 14 ร้านอร่อย โรงเรียนวิทยานุกูลนารี</h1>
+        <p>คลิกดูเมนูและราคาของแต่ละร้านได้เลย!</p>
+    </header>
+
+    <div class="container">
+        <div class="grid" id="shop-grid"></div>
+    </div>
+
+    <div class="modal" id="menu-modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 class="modal-title" id="modal-shop-name">ชื่อร้าน</h2>
+            <img class="modal-img" id="modal-shop-img" src="" alt="รูปอาหาร">
+            <p id="modal-shop-desc" style="color:#666; margin-bottom:15px;"></p>
+            <h3>📋 รายการเมนูเด็ด & ราคา</h3>
+            <ul class="menu-list" id="modal-menu-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        // ข้อมูลอัปเดตตรงตามที่มึงให้มา 100%
+        const shops = [
+            {
+                id: 1,
+                name: "ร้านที่ 1: ร้านน้ำ",
+                location: "📍 ล็อกที่ 1",
+                img: "https://images.unsplash.com/photo-1527661591475-527312dd65f5?w=500",
+                desc: "บริการน้ำเปล่าเย็นๆ ดับกระหาย",
+                menus: [
+                    { name: "น้ำเปล่า", price: "5 บาท" }
+                ]
+            },
+            {
+                id: 2,
+                name: "ร้านที่ 2: ข้าวมันไก่",
+                location: "📍 ล็อกที่ 2",
+                img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500",
+                desc: "เนื้อสัตว์: ไก่ต้ม / ไก่ทอด / ไก่ป๊อป / หมูทอด",
+                menus: [
+                    { name: "ธรรมดา", price: "25 บาท" },
+                    { name: "พิเศษ", price: "35 บาท" }
+                ]
+            },
+            {
+                id: 3,
+                name: "ร้านที่ 3: ร้านไอติม",
+                location: "📍 ล็อกที่ 3",
+                img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500",
+                desc: "รสชาติ: ช็อกโกแลต, ชาไทย, กะทิ, ช็อกโกแลตชิป, ชาเขียว, วานิลลา | เลือกใส่ถ้วย หรือใส่ขนมปังได้ | ท็อปปิ้งฟรี: ข้าวเหนียว, วุ้นมะพร้าว, ซอสช็อกโกแลต, สตรอว์เบอร์รี",
+                menus: [
+                    { name: "ไซส์เล็ก", price: "10 บาท" },
+                    { name: "ไซส์กลาง", price: "15 บาท" },
+                    { name: "ไซส์ใหญ่", price: "20 บาท" }
+                ]
+            },
+            {
+                id: 4,
+                name: "ร้านที่ 4: ร้านเครป",
+                location: "📍 ล็อกที่ 4",
+                img: "https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?w=500",
+                desc: "เครปแป้งกรอบ ร้อนๆ สดใหม่",
+                menus: [
+                    { name: "ไส้กรอก", price: "ตามป้าย" },
+                    { name: "ไส้หวาน", price: "ตามป้าย" },
+                    { name: "ไส้ช็อกโกแลต", price: "ตามป้าย" }
+                ]
+            },
+            {
+                id: 5,
+                name: "ร้านที่ 5: ข้าวราดแกง (1)",
+                location: "📍 ล็อกที่ 5",
+                img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500",
+                desc: "กับข้าว: กะเพรา, ลาบ, ไก่แซ่บ | ท็อปปิ้ง: ไข่ดาว, ทอดมันข้าวโพด",
+                menus: [
+                    { name: "ธรรมดา", price: "25 บาท" },
+                    { name: "พิเศษ", price: "30 บาท" }
+                ]
+            },
+            {
+                id: 6,
+                name: "ร้านที่ 6: ร้านน้ำหวาน",
+                location: "📍 ล็อกที่ 6",
+                img: "https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=500",
+                desc: "น้ำผลไม้สดชื่น ดับร้อนช่วงพักเที่ยง",
+                menus: [
+                    { name: "น้ำลำไย", price: "ตามป้าย" },
+                    { name: "น้ำแตงโม", price: "ตามป้าย" },
+                    { name: "น้ำสตรอว์เบอร์รี", price: "ตามป้าย" },
+                    { name: "น้ำแอปเปิล", price: "ตามป้าย" },
+                    { name: "น้ำองุ่น", price: "ตามป้าย" }
+                ]
+            },
+            {
+                id: 7,
+                name: "ร้านที่ 7: ร้านก๋วยเตี๋ยว (1)",
+                location: "📍 ล็อกที่ 7",
+                img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500",
+                desc: "เส้น: เส้นเล็ก / เส้นใหญ่ / เส้นมาม่า / หมี่หยก / เกี๊ยว | น้ำซุป: หมู / เย็นตาโฟ / ต้มยำ",
+                menus: [
+                    { name: "ธรรมดา", price: "25 บาท" },
+                    { name: "พิเศษ", price: "30 บาท" }
+                ]
+            },
+            {
+                id: 8,
+                name: "ร้านที่ 8: ร้านก๋วยเตี๋ยว (2)",
+                location: "📍 ล็อกที่ 8",
+                img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500",
+                desc: "เส้น: เส้นเล็ก / เส้นใหญ่ / เส้นมาม่า / หมี่หยก / เกี๊ยว | น้ำซุป: หมู / เย็นตาโฟ / ต้มยำ",
+                menus: [
+                    { name: "ธรรมดา", price: "25 บาท" },
+                    { name: "พิเศษ", price: "30 บาท" }
+                ]
+            },
+            {
+                id: 9,
+                name: "ร้านที่ 9: ร้านผลไม้",
+                location: "📍 ล็อกที่ 9",
+                img: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=500",
+                desc: "ผลไม้สดปอกพร้อมทาน เย็นฉ่ำ",
+                menus: [
+                    { name: "แตงโม / องุ่น / มะม่วง / ฝรั่ง / แอปเปิล", price: "10 บาทหมดทุกอย่าง" }
+                ]
+            },
+            {
+                id: 10,
+                name: "ร้านที่ 10: ร้านน้ำแข็งไส",
+                location: "📍 ล็อกที่ 10",
+                img: "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=500",
+                desc: "น้ำหวาน: น้ำแดง / น้ำเขียว | ท็อปปิ้ง: เฉาก๊วย, ขนมปัง, วุ้นมะพร้าว, ซีเรียล",
+                menus: [
+                    { name: "เลือกใส่ท็อปปิ้ง 2 อย่าง", price: "10 บาท" },
+                    { name: "เลือกใส่ท็อปปิ้ง 3 อย่าง", price: "15 บาท" }
+                ]
+            },
+            {
+                id: 11,
+                name: "ร้านที่ 11: ขนมจีบ ซาลาเปา",
+                location: "📍 ล็อกที่ 11",
+                img: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=500",
+                desc: "นึ่งร้อนๆ | ไส้ซาลาเปา: หมู / ครีม / ถั่วแดง",
+                menus: [
+                    { name: "ขนมจีบ", price: "ลูกละ 2 บาท" },
+                    { name: "ซาลาเปา", price: "ลูกละ 5 บาท" }
+                ]
+            },
+            {
+                id: 12,
+                name: "ร้านที่ 12: ข้าวราดแกง (2)",
+                location: "📍 ล็อกที่ 12",
+                img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=500",
+                desc: "กับข้าว: กะเพรา, ลาบ, ไก่แซ่บ | ท็อปปิ้ง: ไข่ดาว, ทอดมันข้าวโพด",
+                menus: [
+                    { name: "ธรรมดา", price: "25 บาท" },
+                    { name: "พิเศษ", price: "30 บาท" }
+                ]
+            },
+            {
+                id: 13,
+                name: "ร้านที่ 13: ร้านลูกชิ้น",
+                location: "📍 ล็อกที่ 13",
+                img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=500",
+                desc: "ลูกชิ้นนึ่งร้อนๆ พร้อมน้ำจิ้มเด็ด",
+                menus: [
+                    { name: "ลูกชิ้นนึ่ง", price: "ไม้ละ 5 บาท" }
+                ]
+            },
+            {
+                id: 14,
+                name: "ร้านที่ 14: ร้านเบเกอรี",
+                location: "📍 ล็อกที่ 14",
+                img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500",
+                desc: "ของหวานและขนมทานเล่นหลากหลาย",
+                menus: [
+                    { name: "คุกกี้ / เครปเย็น / ขนมปังก้นหอย / โคอะลามาร์ช / บราวนี่ / พุดดิ้งช็อกโกแลต / พุดดิ้งสตรอว์เบอร์รี / เอแคลร์", price: "10 บาททุกอย่าง" }
+                ]
+            }
+        ];
+
+        const grid = document.getElementById('shop-grid');
+        shops.forEach(shop => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <img src="${shop.img}" alt="${shop.name}">
+                <div class="card-content">
+                    <div>
+                        <div class="shop-title">${shop.name}</div>
+                        <div class="shop-location">${shop.location}</div>
+                    </div>
+                    <button class="btn-view" onclick="openModal(${shop.id})">🔍 คลิกดูเมนู & ราคา</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+        function openModal(shopId) {
+            const shop = shops.find(s => s.id === shopId);
+            if(!shop) return;
+
+            document.getElementById('modal-shop-name').innerText = shop.name;
+            document.getElementById('modal-shop-img').src = shop.img;
+            document.getElementById('modal-shop-desc').innerText = shop.desc;
+
+            const menuList = document.getElementById('modal-menu-list');
+            menuList.innerHTML = '';
+            shop.menus.forEach(m => {
+                menuList.innerHTML += `
+                    <li class="menu-item">
+                        <span>${m.name}</span>
+                        <strong style="color:#ff6b6b">${m.price}</strong>
+                    </li>
+                `;
+            });
+
+            document.getElementById('menu-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('menu-modal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('menu-modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
